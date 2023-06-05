@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
 use App\Models\Post;
 
 class PostController extends Controller
@@ -12,20 +11,20 @@ class PostController extends Controller
         // dd(request(['search'])); returns array
         // dd(request()->only('search'));   returns array
         // dd(request('search'));   returns string
+        // ddd(Post::latest()->filter(request(['search']))->get());
 
-        // dd(Post::latest()->filter(request(['search']))->get());
-
-        return view('posts', [
-            'posts' => Post::latest()->filter(request(['search']))->get(),    // filter the posts with query scope made in Post Model
-            'categories' => Category::all()
+        // filter the posts with query scope made in Post Model
+        return view('posts.index', [
+            'posts' => Post::latest()->filter(
+                request(['search', 'category', 'author'])
+            )->paginate(6)->withQueryString()
         ]);
     }
 
     public function show(Post $post)
     {
-        return view('post', [
-            'post' => $post,
-            'categories' => Category::all()
+        return view('posts.show', [
+            'post' => $post
         ]);
     }
 }
