@@ -3,21 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use Illuminate\Validation\Rule;
 
 class PostController extends Controller
 {
     public function index()
     {
-        // dd(request(['search'])); returns array
-        // dd(request()->only('search'));   returns array
-        // dd(request('search'));   returns string
-        // ddd(Post::latest()->filter(request(['search']))->get());
-
-        // filter the posts with query scope made in Post Model
         return view('posts.index', [
             'posts' => Post::latest()->filter(
-                request(['search', 'category', 'author'])
-            )->paginate(6)->withQueryString()
+                        request(['search', 'category', 'author'])
+                    )->paginate(18)->withQueryString()
         ]);
     }
 
@@ -26,5 +21,29 @@ class PostController extends Controller
         return view('posts.show', [
             'post' => $post
         ]);
+    }
+
+    public function create()
+    {
+        return view('posts.create');
+    }
+
+    public function store()
+    {
+        $attributes = request()->validate([
+            'title' => 'required',
+            'thumbnail' => 'required|image',
+            'slug' => ['required', Rule::unique('posts', 'slug')],
+            'excerpt' => 'required',
+            'body' => 'required',
+            'category_id' => ['required', Rule::exists('categories', 'id')]
+        ]);
+
+        $attributes['user_id'] = auth()->id();
+        $attributes['thumbnail'] = request()->file('thumbnail')->store('thumbnails');
+
+        Post::create($attributes);
+
+        return redirect('/');
     }
 }
